@@ -1,0 +1,53 @@
+version: '2'
+services:
+
+    nginx:
+      container_name: nginx
+      image: vmeijer/nginx-proxy:1.3.2.3
+      restart: unless-stopped
+      build:
+        context: .
+        dockerfile: ./Dockerfile
+      ports:
+        - '80:80'
+        - '443:443'
+      volumes:
+        - ./web/wwwroot:/var/www
+        - ./letsencrypt:/etc/letsencrypt
+        - nginx-log:/var/log/nginx
+      environment:
+        - NGINX_PROTOCOL=strict-https
+        - NGINX_PROXY_MODE=local_and_remote
+        - REMOTE_PROXY_HOST=<remote_proxy_container>
+        - REMOTE_PROXY_PORT=443
+        - REMOTE_PROXY_SUBPATH=/database
+        - LOCAL_PROXY_HOST=<local_proxy_container>
+        - LOCAL_PROXY_PORT=8000
+        - STATIC_URL=/static
+        - MEDIA_URL=/media
+        - DOMAIN_NAMES=localhost
+        - PUBLIC_MODE=False
+        - TZ=EST
+
+
+    letsencrypt:
+      container_name: letsencrypt
+      image: cvast/cvast-letsencrypt:1.1
+      volumes:
+        - ./web/wwwroot:/var/www
+        - ./letsencrypt:/etc/letsencrypt
+        - letsencrypt-log:/var/log/letsencrypt
+      command: get_certificate
+      environment:
+        - MODE=regular
+        - LETSENCRYPT_EMAIL=info@example.com
+        - DOMAIN_NAMES=example.com www.example.com
+        - PRODUCTION_MODE=True
+        - PERSISTENT_MODE=True
+        - TZ=EST
+      labels:
+        org.label-schema.group: "prod-cvast-arches-monitoring"
+
+volumes:
+    nginx-log:
+    letsencrypt-log:
