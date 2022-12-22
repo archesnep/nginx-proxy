@@ -1,4 +1,4 @@
-FROM nginx:1.20.0
+FROM nginx:1.23
 
 USER root
 RUN rm -rf /usr/share/nginx/html
